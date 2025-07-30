@@ -1,9 +1,12 @@
 import { Routes, Route } from "react-router-dom";
-import HomePage from "./components/pages/HomePage";
-import { PersonalColorPage } from "./components/pages/PersonalColorPage";
-import { CategoryProduct } from "./components/pages/CategoryProduct";
-import { CartPage } from "./components/pages/CartPage";
-import  ProductDetail from "./components/pages/ProductDetail";
+import HomePage from "./pages/HomePage";
+import { PersonalColorPage } from "./pages/PersonalColorPage";
+import { CategoryProduct } from "./pages/CategoryProduct";
+import { CartPage } from "./pages/CartPage";
+import  ProductDetail from "./pages/ProductDetail";
+import Login  from "./pages/Login";
+import Register from "./pages/Register";
+import CustomerInfomation from "./pages/CustomerInfomation";
 
 function App() {
   return (
@@ -14,6 +17,9 @@ function App() {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/products" element={<CategoryProduct />} />
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="/login" element={<Login/>} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/customer/info" element={<CustomerInfomation />} />
     </Routes>
   );
 }

@@ -18,9 +18,10 @@ import { MountPoint } from "./shared/utilities/sync-ui.ts";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./tailwind.css";
-import  App  from "./app.tsx";
+import App from "./app.tsx";
 
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from "react-router-dom";
+import AuthContextProvider from "./context/authen/AuthContext.tsx";
 
 initLocaleForDayJs();
 const localeText: Partial<PickersLocaleText<Dayjs>> = {
@@ -45,9 +46,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       localeText={localeText}
     >
       <ThemeRegistry>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AuthContextProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AuthContextProvider>
         <CssBaseline />
         <ToastContainer autoClose={4000} hideProgressBar limit={5} />
         <MountPoint />

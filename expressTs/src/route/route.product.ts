@@ -5,7 +5,7 @@ import {
   getCategoryProducts,
   getProductsSaleOffTop,
   getProductsNewArrivals,
-} from '../app/controller/product';
+} from '../app/controller/product.controller';
 
 const router = express.Router();
 
