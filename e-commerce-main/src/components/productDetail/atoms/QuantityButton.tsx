@@ -8,7 +8,12 @@ interface QuantityButtonProps {
   sx?: SxProps;
 }
 
-const QuantityButton = ({ label, onClick, disabled, sx }: QuantityButtonProps) => {
+const QuantityButton = ({
+  label,
+  onClick,
+  disabled,
+  sx,
+}: QuantityButtonProps) => {
   return (
     <Button
       variant="outlined"
@@ -17,8 +22,8 @@ const QuantityButton = ({ label, onClick, disabled, sx }: QuantityButtonProps) =
       sx={{
         minWidth: "40px",
         height: "40px",
-        borderColor: "#d1d5db", // Tailwind: border-gray-300
-        color: "#374151", // Tailwind: text-gray-700
+        borderColor: "#d1d5db",
+        color: "#374151",
         fontWeight: 500,
         ...sx,
       }}

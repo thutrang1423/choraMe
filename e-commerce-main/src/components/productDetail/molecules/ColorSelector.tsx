@@ -26,7 +26,7 @@ const ColorSelector = ({
             key={color.id}
             colorHex={color.hex_code}
             colorName={color.name}
-            isSelected={selectedColorId === color.id}
+            isSelected={selectedColorId === String(color.id)}
             onClick={() => onSelect?.(String(color.id))}
           />
         ))

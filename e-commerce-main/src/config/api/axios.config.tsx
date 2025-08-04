@@ -1,17 +1,17 @@
-import axios from 'axios';
-const  API_URL = "";
+import axios from "axios";
+const API_URL = "";
 const serverInstance = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-    'Access-Control-Allow-Origin': '*',
-  }
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "Access-Control-Allow-Origin": "*",
+  },
 });
 
 serverInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     config.headers.Authorization = `Bearer ${token}`;
     return config;
   },

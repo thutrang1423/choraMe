@@ -18,6 +18,7 @@ const fallbackImages = [anh1, anh2, anh3, anh4, anh1, anh2, anh3, anh4];
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState<ProductType | null>(null);
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [startIndex, setStartIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -55,10 +56,18 @@ const ProductDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    if (product?.productSizes?.length) {
-      setSelectedSize(product.productSizes[0]);
+    if (product) {
+      // Mặc định chọn màu đầu tiên (nếu có)
+      if (product.colors && product.colors.length > 0) {
+        setSelectedColorId(String(product.colors[0].id));
+      }
+
+      // Mặc định chọn size đầu tiên (nếu có)
+      if (product.productSizes && product.productSizes.length > 0) {
+        setSelectedSize(product.productSizes[0]);
+      }
     }
-  }, [product?.productSizes]);
+  }, [product]);
 
   return (
     <MainLayout>
@@ -82,6 +91,8 @@ const ProductDetail = () => {
           product={product}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
+          selectedColorId={selectedColorId}
+          setSelectedColorId={setSelectedColorId}
           quantity={quantity}
           setQuantity={setQuantity}
         />
@@ -94,11 +105,11 @@ const ProductDetail = () => {
       />
 
       <div className="grid grid-cols-12 gap-4 p-4">
-          <ProductSection
-            title="Bạn có thể cũng thích"
-            products={product?.mightLike}
-          />
-        </div>
+        <ProductSection
+          title="Bạn có thể cũng thích"
+          products={product?.mightLike}
+        />
+      </div>
     </MainLayout>
   );
 };

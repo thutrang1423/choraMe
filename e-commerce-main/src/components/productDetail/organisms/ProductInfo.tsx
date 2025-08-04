@@ -6,23 +6,74 @@ import QuantitySelector from "../molecules/QuantitySelector";
 import RoundedButton from "../../common/RoundedButton";
 import { Product as ProductType } from "../../../types/product.type";
 
+import { useContext, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../context/authen/AuthContext";
+import serverInstance from "../../../config/api/axios.config";
+import { toast } from "react-toastify";
+
 interface ProductInfoProps {
   product: ProductType | null;
   selectedSize: string | null;
-  setSelectedSize: (size: string) => void;
+  setSelectedSize: (size: string | null) => void;
+  selectedColorId: string | null;
+  setSelectedColorId: (id: string | null) => void;
   quantity: number;
   setQuantity: (quantity: number) => void;
 }
 
 const ProductInfo = ({
   product,
-  selectedSize,
-  setSelectedSize,
   quantity,
   setQuantity,
+  selectedSize,
+  setSelectedSize,
+  selectedColorId,
+  setSelectedColorId,
 }: ProductInfoProps) => {
-const handleDecrease = () => setQuantity(quantity > 0 ? quantity - 1 : 0);
-const handleIncrease = () => setQuantity(quantity + 1);
+  const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+
+  // 🔍 Filter size theo màu đang chọn
+  const availableSizes = useMemo(() => {
+    if (!product?.variants || !selectedColorId) return [];
+    return product.variants
+      .filter((v) => String(v.color.id) === String(selectedColorId))
+      .map((v) => v.size);
+  }, [product?.variants, selectedColorId]);
+
+  // 🔍 Tìm biến thể được chọn
+  const selectedVariant = useMemo(() => {
+    return product?.variants?.find(
+      (v) =>
+        v.size === selectedSize &&
+        String(v.color.id) === String(selectedColorId)
+    );
+  }, [product?.variants, selectedSize, selectedColorId]);
+
+  const handleDecrease = () => setQuantity(quantity > 0 ? quantity - 1 : 0);
+  const handleIncrease = () => setQuantity(quantity + 1);
+
+  const handleAddToCart = async () => {
+    if (!currentUser) return navigate("/login");
+
+    const sizeId = product?.sizes?.find((s) => s.name === selectedSize)?.id;
+    if (!selectedColorId || !sizeId)
+      return toast.warning("Vui lòng chọn màu và size!");
+
+    try {
+      await serverInstance.post("/cart/add", {
+        product_id: product?.id,
+        color_id: Number(selectedColorId),
+        size_id: sizeId,
+        quantity,
+      });
+      toast.success("Đã thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Add to cart error", error);
+      toast.error("Lỗi khi thêm vào giỏ hàng");
+    }
+  };
 
   return (
     <div className="flex-1 max-w-[550px]">
@@ -31,22 +82,36 @@ const handleIncrease = () => setQuantity(quantity + 1);
       </Typography>
 
       <PriceInfo
-        price={product?.price}
-        salePrice={product?.salePrice}
-        saleOff={product?.saleOff}
-      />
-
-      <SizeSelector
-        sizes={product?.allSizes || []}
-        availableSizes={product?.productSizes || []}
+        variants={product?.variants}
+        selectedColorId={selectedColorId}
         selectedSize={selectedSize}
-        onSelect={setSelectedSize}
+        context="detail"
       />
 
       <ColorSelector
         colors={product?.colors || []}
-        selectedColorId={undefined} // hoặc truyền prop nếu có logic chọn màu
-        onSelect={() => {}}
+        selectedColorId={selectedColorId || undefined}
+        onSelect={(id) => {
+          setSelectedColorId(id);
+
+          // 🔽 Lấy size đầu tiên tương ứng với màu mới chọn
+          const sizesForColor = product?.variants
+            ?.filter((v) => String(v.color.id) === String(id))
+            .map((v) => v.size);
+
+          if (sizesForColor && sizesForColor.length > 0) {
+            setSelectedSize(sizesForColor[0]);
+          } else {
+            setSelectedSize(null); // không có size thì reset
+          }
+        }}
+      />
+
+      <SizeSelector
+        allSizes={product?.allSizes || []}
+        availableSizes={availableSizes}
+        selectedSize={selectedSize}
+        onSelect={setSelectedSize}
       />
 
       <div className="mt-6 flex items-center gap-4">
@@ -57,7 +122,7 @@ const handleIncrease = () => setQuantity(quantity + 1);
         />
 
         <RoundedButton
-          onClick={() => console.log("Add to cart", { product, quantity })}
+          onClick={handleAddToCart}
           backgroundColor="#fd541b"
           hoverBackgroundColor="#fc0c04"
           color="#fff"

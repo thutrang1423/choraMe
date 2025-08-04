@@ -6,7 +6,7 @@ import { CartPage } from "./pages/CartPage";
 import  ProductDetail from "./pages/ProductDetail";
 import Login  from "./pages/Login";
 import Register from "./pages/Register";
-import CustomerInfomation from "./pages/CustomerInfomation";
+import CustomerInfomation from "./pages/UserInfo";
 
 function App() {
   return (

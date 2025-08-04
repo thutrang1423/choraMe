@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom"; 
+import { useSearchParams } from "react-router-dom";
 import FilterSidebar from "../components/filter/FilterSidebar";
 import ProductGrid from "../components/productCard/ProductGrid";
 import Breadcrumb from "../components/common/Breadcrumb";
@@ -17,8 +17,8 @@ const PRODUCTS_PER_PAGE = 9;
 export const CategoryProduct = () => {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [page, setPage] = useState(1);
-  const [searchParams] = useSearchParams(); 
-  const categorySlug = searchParams.get("category"); 
+  const [searchParams] = useSearchParams();
+  const categorySlug = searchParams.get("category");
 
   const [filters, setFilters] = useState<{
     season: Season | "default";
@@ -27,19 +27,20 @@ export const CategoryProduct = () => {
     styles: string[];
     sizes: string[];
     priceRange: number[];
-    category?: string; 
+    category?: string;
   }>({
     season: "default",
     subtone: "default",
     dominant: "default",
     styles: [],
     sizes: [],
-    priceRange: [0, 20000000],
+    priceRange: [0, 5000000],
   });
 
   const fetchProducts = async () => {
     const query = new URLSearchParams();
-    const { season, subtone, dominant, styles, sizes, priceRange, category } = filters;
+    const { season, subtone, dominant, styles, sizes, priceRange, category } =
+      filters;
 
     if (season !== "default") query.set("season", season);
     if (subtone !== "default") query.set("subtone", subtone);
@@ -50,7 +51,7 @@ export const CategoryProduct = () => {
 
     const [min, max] = priceRange;
     if (min > 0) query.set("price_gte", String(min));
-    if (max < 20000000) query.set("price_lte", String(max));
+    if (max < 5000000) query.set("price_lte", String(max));
 
     if (category) query.set("category", category);
 

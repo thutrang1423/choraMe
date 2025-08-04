@@ -1,11 +1,12 @@
 export type Product = {
   id: string;
   title: string;
-  price: number;
-  salePrice: number;
-  saleOff: number;
   created_at: string;
   category_id: string;
+
+  price?: number;
+  salePrice?: number;
+  saleOff?: number;
 
   detail?: {
     des: string;
@@ -14,12 +15,16 @@ export type Product = {
     origin: string;
     gender: string;
     season: string;
-    // is_new: boolean;
     is_featured: boolean;
   };
 
   productSizes: string[];
   allSizes?: string[];
+
+  sizes?: {
+    id: number;
+    name: string;
+  }[];
 
   colors: {
     id: number;
@@ -30,12 +35,19 @@ export type Product = {
 
   variants?: {
     size: string;
-    color: string;
+    color: {
+      id: number;
+      name: string;
+      slug: string;
+      hex_code: string;
+    };
     stock: number;
     sku?: string;
+    price: number;
+    sale_off: number;
+    sale_price: number;
   }[];
 
   images?: string[];
-
   mightLike?: Product[];
 };
