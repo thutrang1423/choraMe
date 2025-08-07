@@ -3,7 +3,7 @@ import productsRouter from "./route.product";
 import { getCategories } from "../app/controller/category.controller";
 import meRouter from "./route.me";
 import authRouter from "./route.auth";
-import cartRouter from "./route.auth";
+import cartRouter from "./route.cart";
 
 export function route(app: Application) {
   app.use("/products", productsRouter);

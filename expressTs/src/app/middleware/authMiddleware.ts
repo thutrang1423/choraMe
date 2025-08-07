@@ -26,7 +26,7 @@ export const verifyToken = (
   next: NextFunction
 ) => {
   const token = req.cookies.accessToken;
-  console.log("cookies:", req.cookies);
+  // console.log("cookies:", req.cookies);
 
   if (!token) {
     return res.status(401).json("Bạn chưa đăng nhập");
@@ -34,7 +34,7 @@ export const verifyToken = (
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    console.log("🧾 Decoded token:", decoded);
+    // console.log("🧾 Decoded token:", decoded);
     req.user = decoded;
     next();
   } catch (err) {

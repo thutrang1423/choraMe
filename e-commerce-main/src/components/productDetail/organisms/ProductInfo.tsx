@@ -42,15 +42,6 @@ const ProductInfo = ({
       .map((v) => v.size);
   }, [product?.variants, selectedColorId]);
 
-  // 🔍 Tìm biến thể được chọn
-  const selectedVariant = useMemo(() => {
-    return product?.variants?.find(
-      (v) =>
-        v.size === selectedSize &&
-        String(v.color.id) === String(selectedColorId)
-    );
-  }, [product?.variants, selectedSize, selectedColorId]);
-
   const handleDecrease = () => setQuantity(quantity > 0 ? quantity - 1 : 0);
   const handleIncrease = () => setQuantity(quantity + 1);
 
