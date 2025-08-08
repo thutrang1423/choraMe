@@ -3,7 +3,7 @@ import { AuthContext } from "../context/authen/AuthContext";
 import { Button, TextField, Typography, Box } from "@mui/material";
 import Breadcrumb from "../components/common/Breadcrumb";
 import { useNavigate } from "react-router-dom";
-import axios from "../config/api/axios.config";
+import axios from "../config/axios.config";
 
 export default function CustomerInformation() {
   const { logout } = useContext(AuthContext);

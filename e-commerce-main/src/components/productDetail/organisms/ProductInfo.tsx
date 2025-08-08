@@ -9,7 +9,8 @@ import { Product as ProductType } from "../../../types/product.type";
 import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../context/authen/AuthContext";
-import serverInstance from "../../../config/api/axios.config";
+import { CartContext } from "../../../context/cart/CartContext";
+import serverInstance from "../../../config/axios.config";
 import { toast } from "react-toastify";
 
 interface ProductInfoProps {
@@ -33,8 +34,8 @@ const ProductInfo = ({
 }: ProductInfoProps) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
+  const { fetchCartItems } = useContext(CartContext);
 
-  // 🔍 Filter size theo màu đang chọn
   const availableSizes = useMemo(() => {
     if (!product?.variants || !selectedColorId) return [];
     return product.variants
@@ -48,9 +49,14 @@ const ProductInfo = ({
   const handleAddToCart = async () => {
     if (!currentUser) return navigate("/login");
 
-    const sizeId = product?.sizes?.find((s) => s.name === selectedSize)?.id;
-    if (!selectedColorId || !sizeId)
-      return toast.warning("Vui lòng chọn màu và size!");
+    const selectedSizeObj = product?.sizes?.find(
+      (s) => s.name === selectedSize
+    );
+    const sizeId = selectedSizeObj?.id;
+
+    if (!selectedColorId || !sizeId) {
+      return toast.warning("Vui lòng chọn đầy đủ màu và size!");
+    }
 
     try {
       await serverInstance.post("/cart/add", {
@@ -59,10 +65,16 @@ const ProductInfo = ({
         size_id: sizeId,
         quantity,
       });
+
       toast.success("Đã thêm vào giỏ hàng!");
+
+      // ✅ Cập nhật giỏ hàng trong context (navbar sẽ hiển thị lại số lượng)
+      if (fetchCartItems) {
+        await fetchCartItems();
+      }
     } catch (error) {
       console.error("Add to cart error", error);
-      toast.error("Lỗi khi thêm vào giỏ hàng");
+      toast.error("Lỗi khi thêm vào giỏ hàng!");
     }
   };
 
@@ -85,7 +97,6 @@ const ProductInfo = ({
         onSelect={(id) => {
           setSelectedColorId(id);
 
-          // 🔽 Lấy size đầu tiên tương ứng với màu mới chọn
           const sizesForColor = product?.variants
             ?.filter((v) => String(v.color.id) === String(id))
             .map((v) => v.size);
@@ -93,7 +104,7 @@ const ProductInfo = ({
           if (sizesForColor && sizesForColor.length > 0) {
             setSelectedSize(sizesForColor[0]);
           } else {
-            setSelectedSize(null); // không có size thì reset
+            setSelectedSize(null);
           }
         }}
       />

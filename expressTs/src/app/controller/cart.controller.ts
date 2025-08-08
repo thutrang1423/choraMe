@@ -72,3 +72,48 @@ export const getCartItems = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Không thể lấy giỏ hàng." });
   }
 };
+
+// Xoá sản phẩm khỏi giỏ hàng
+export const deleteCartItem = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const cartId = req.params.cartId;
+
+    if (!cartId) {
+      return res.status(400).json({ message: "Thiếu cartId." });
+    }
+
+    await db.query(
+      "DELETE FROM cart_products WHERE id = ? AND user_id = ?",
+      [cartId, userId]
+    );
+
+    return res.status(200).json({ message: "Đã xoá sản phẩm khỏi giỏ hàng." });
+  } catch (error) {
+    console.error("Delete cart item error:", error);
+    res.status(500).json({ message: "Lỗi server khi xoá sản phẩm." });
+  }
+};
+
+// Cập nhật số lượng sản phẩm trong giỏ hàng
+export const updateCartItemQuantity = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const cartId = req.params.cartId;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Số lượng không hợp lệ." });
+    }
+
+    await db.query(
+      "UPDATE cart_products SET quantity = ? WHERE id = ? AND user_id = ?",
+      [quantity, cartId, userId]
+    );
+
+    return res.status(200).json({ message: "Cập nhật số lượng thành công." });
+  } catch (error) {
+    console.error("Update quantity error:", error);
+    res.status(500).json({ message: "Lỗi server khi cập nhật số lượng." });
+  }
+};

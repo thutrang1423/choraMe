@@ -7,13 +7,16 @@ import {
   IconButton,
   Typography,
   Button,
+  Badge,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Breadcrumb from "../components/common/Breadcrumb";
 import MainLayout from "../components/layout/MainLayout";
 import QuantitySelector from "../components/productDetail/molecules/QuantitySelector";
 import { useEffect, useState } from "react";
-import { fetchCartItems } from "../config/api/cartApi";
+import { fetchCartItems } from "../api/cartApi";
+import { deleteCartItem } from "../api/cartApi";
+import { updateCartQuantity } from "../api/cartApi";
 
 interface CartItem {
   cart_id: string;
@@ -45,18 +48,31 @@ const CartPage = () => {
     loadCart();
   }, []);
 
-  const handleQuantityChange = (id: string, newQty: number) => {
+  const handleQuantityChange = async (id: string, newQty: number) => {
+  try {
+    await updateCartQuantity(id, newQty); // gọi API cập nhật backend
+
+    // cập nhật UI
     setCartItems((prev) =>
       prev.map((item) =>
         item.cart_id === id ? { ...item, quantity: newQty } : item
       )
     );
-  };
+  } catch (err) {
+    console.error("Lỗi khi cập nhật số lượng:", err);
+  }
+};
 
-  const handleDelete = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.cart_id !== id));
-    setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
-    // TODO: gọi API xóa giỏ hàng ở backend nếu cần
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCartItem(id); // gọi API xoá trên backend
+
+      // Cập nhật lại UI
+      setCartItems((prev) => prev.filter((item) => item.cart_id !== id));
+      setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
+    } catch (err) {
+      console.error("Lỗi khi xoá sản phẩm:", err);
+    }
   };
 
   const formatPrice = (val: number) => `${val.toLocaleString("vi-VN")}₫`;
@@ -74,6 +90,8 @@ const CartPage = () => {
     0
   );
   const totalDiscount = totalOriginal - totalSale;
+
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <MainLayout>
@@ -201,6 +219,10 @@ const CartPage = () => {
           <Box className="flex justify-between font-semibold text-lg">
             <span>Tổng cộng:</span>
             <span className="text-red-500">{formatPrice(totalSale)}</span>
+          </Box>
+          <Box className="flex justify-between text-sm text-gray-500">
+            <span>Tổng số lượng:</span>
+            <span>{totalQuantity}</span>
           </Box>
           <Button
             variant="contained"

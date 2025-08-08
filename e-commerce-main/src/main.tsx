@@ -22,6 +22,7 @@ import App from "./app.tsx";
 
 import { BrowserRouter } from "react-router-dom";
 import AuthContextProvider from "./context/authen/AuthContext.tsx";
+import { CartProvider } from "./context/cart/CartContext.tsx";
 
 initLocaleForDayJs();
 const localeText: Partial<PickersLocaleText<Dayjs>> = {
@@ -48,7 +49,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeRegistry>
         <AuthContextProvider>
           <BrowserRouter>
+           <CartProvider>
             <App />
+           </CartProvider>
           </BrowserRouter>
         </AuthContextProvider>
         <CssBaseline />
