@@ -30,7 +30,7 @@ export const register = async (req: Request, res: Response) => {
     console.log("Registering user:", { username, email, name });
     await db.execute(
       "INSERT INTO users (username, email, password, full_name, role) VALUES (?,?,?,?,?)",
-      [username, email, hashedPassword, name, "user"]
+      [username, email, hashedPassword, name, "customer"]
     );
 
     return res.status(201).json("User has been created.");

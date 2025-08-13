@@ -15,8 +15,10 @@ import QuantitySelector from "../components/productDetail/molecules/QuantitySele
 import { useEffect, useState } from "react";
 import { useCart } from "../context/cart/CartContext";
 import { CartProduct } from "../types/cart.type";
+import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const { cartItems, fetchCartItems, updateCartItemQty, deleteCartItemById } =
     useCart();
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
@@ -26,17 +28,17 @@ const CartPage = () => {
   }, [fetchCartItems]);
 
   useEffect(() => {
-  const newSelected = cartItems.map((item) => item.cart_id);
+    const newSelected = cartItems.map((item) => item.cart_id);
 
-  // So sánh 2 mảng đơn giản: cùng độ dài và phần tử tương ứng giống nhau
-  const isSame =
-    selectedItems.length === newSelected.length &&
-    selectedItems.every((id, idx) => id === newSelected[idx]);
+    // So sánh 2 mảng đơn giản: cùng độ dài và phần tử tương ứng giống nhau
+    const isSame =
+      selectedItems.length === newSelected.length &&
+      selectedItems.every((id, idx) => id === newSelected[idx]);
 
-  if (!isSame) {
-    setSelectedItems(newSelected);
-  }
-}, [cartItems, selectedItems]);
+    if (!isSame) {
+      setSelectedItems(newSelected);
+    }
+  }, [cartItems, selectedItems]);
 
   const handleQuantityChange = async (cartId: number, newQty: number) => {
     await updateCartItemQty(cartId, newQty);
@@ -49,22 +51,24 @@ const CartPage = () => {
   const formatPrice = (val: number) => `${val.toLocaleString("vi-VN")}₫`;
 
   const selectedCartItems = cartItems.filter((item) =>
-    selectedItems.includes(item.cart_id)
-  );
+  selectedItems.includes(item.cart_id)
+);
 
-  const totalOriginal = selectedCartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const totalSale = selectedCartItems.reduce(
-    (sum, item) =>
-      sum +
-      (item.sale_price !== undefined ? item.sale_price : item.price) *
-        item.quantity,
-    0
-  );
-  const totalDiscount = totalOriginal - totalSale;
-  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+const totalOriginal = selectedCartItems.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+
+const totalSale = selectedCartItems.reduce(
+  (sum, item) =>
+    sum +
+    (item.sale_price !== undefined ? item.sale_price : item.price) *
+      item.quantity,
+  0
+);
+
+const totalDiscount = totalOriginal - totalSale;
+const totalQuantity = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0); // LƯU Ý sửa đây
 
   return (
     <MainLayout>
@@ -92,7 +96,7 @@ const CartPage = () => {
                 minHeight: 120,
               }}
             >
-              <Checkbox
+              {/* <Checkbox
                 className="absolute top-2 left-2"
                 disableRipple
                 checked={selectedItems.includes(item.cart_id)}
@@ -105,7 +109,7 @@ const CartPage = () => {
                     );
                   }
                 }}
-              />
+              /> */}
 
               <CardMedia
                 component="img"
@@ -121,6 +125,7 @@ const CartPage = () => {
                   borderRadius: "8px",
                   marginLeft: 6,
                 }}
+                onClick={() => navigate(`/products/${item.product_id}`)}
               />
 
               <CardContent sx={{ flex: 1 }}>
