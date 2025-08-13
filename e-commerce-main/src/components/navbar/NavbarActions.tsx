@@ -2,42 +2,35 @@ import { Box, IconButton, Tooltip, Badge } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext } from "../../context/authen/AuthContext";
-import { CartContext } from "../../context/cart/CartContext"; // ✅ Thêm dòng này
+import { useCart } from "../../context/cart/CartContext";
 
 const NavbarActions: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
-  const { cartItems } = useContext(CartContext); // ✅ Lấy cartItems từ context
+  const { cartQuantity, fetchCartItems } = useCart();
+
+  // Khi user đăng nhập → fetch giỏ hàng
+  useEffect(() => {
+    if (currentUser) {
+      fetchCartItems();
+    }
+  }, [currentUser, fetchCartItems]);
 
   const handleAccountClick = () => {
-    if (currentUser) {
-      navigate("/customer/info");
-    } else {
-      navigate("/login");
-    }
+    navigate(currentUser ? "/customer/info" : "/login");
   };
 
   const handleCartClick = () => {
-    if (currentUser) {
-      navigate("/cart");
-    } else {
-      navigate("/login");
-    }
+    navigate(currentUser ? "/cart" : "/login");
   };
-
-  // ✅ Tính tổng số lượng sản phẩm trong giỏ
-  const totalQuantity = cartItems?.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
 
   return (
     <Box display="flex" alignItems="center" className="gap-2">
       <Tooltip title="Giỏ hàng">
         <IconButton onClick={handleCartClick}>
-          <Badge badgeContent={totalQuantity} color="error">
+          <Badge badgeContent={cartQuantity} color="error">
             <ShoppingCartIcon className="text-gray-700" />
           </Badge>
         </IconButton>

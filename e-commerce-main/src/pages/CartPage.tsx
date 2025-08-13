@@ -7,72 +7,43 @@ import {
   IconButton,
   Typography,
   Button,
-  Badge,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Breadcrumb from "../components/common/Breadcrumb";
 import MainLayout from "../components/layout/MainLayout";
 import QuantitySelector from "../components/productDetail/molecules/QuantitySelector";
 import { useEffect, useState } from "react";
-import { fetchCartItems } from "../api/cartApi";
-import { deleteCartItem } from "../api/cartApi";
-import { updateCartQuantity } from "../api/cartApi";
-
-interface CartItem {
-  cart_id: string;
-  product_id: string;
-  title: string;
-  image: string;
-  color: string;
-  hex_code: string;
-  size: string;
-  price: number;
-  sale_price: number;
-  quantity: number;
-}
+import { useCart } from "../context/cart/CartContext";
+import { CartProduct } from "../types/cart.type";
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const { cartItems, fetchCartItems, updateCartItemQty, deleteCartItemById } =
+    useCart();
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   useEffect(() => {
-    const loadCart = async () => {
-      try {
-        const data = await fetchCartItems();
-        setCartItems(data);
-        setSelectedItems(data.map((item: CartItem) => item.cart_id));
-      } catch (error) {
-        console.error("Lỗi khi lấy giỏ hàng:", error);
-      }
-    };
-    loadCart();
-  }, []);
+    fetchCartItems();
+  }, [fetchCartItems]);
 
-  const handleQuantityChange = async (id: string, newQty: number) => {
-  try {
-    await updateCartQuantity(id, newQty); // gọi API cập nhật backend
+  useEffect(() => {
+  const newSelected = cartItems.map((item) => item.cart_id);
 
-    // cập nhật UI
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.cart_id === id ? { ...item, quantity: newQty } : item
-      )
-    );
-  } catch (err) {
-    console.error("Lỗi khi cập nhật số lượng:", err);
+  // So sánh 2 mảng đơn giản: cùng độ dài và phần tử tương ứng giống nhau
+  const isSame =
+    selectedItems.length === newSelected.length &&
+    selectedItems.every((id, idx) => id === newSelected[idx]);
+
+  if (!isSame) {
+    setSelectedItems(newSelected);
   }
-};
+}, [cartItems, selectedItems]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteCartItem(id); // gọi API xoá trên backend
+  const handleQuantityChange = async (cartId: number, newQty: number) => {
+    await updateCartItemQty(cartId, newQty);
+  };
 
-      // Cập nhật lại UI
-      setCartItems((prev) => prev.filter((item) => item.cart_id !== id));
-      setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
-    } catch (err) {
-      console.error("Lỗi khi xoá sản phẩm:", err);
-    }
+  const handleDelete = async (cartId: number) => {
+    await deleteCartItemById(cartId);
   };
 
   const formatPrice = (val: number) => `${val.toLocaleString("vi-VN")}₫`;
@@ -86,11 +57,13 @@ const CartPage = () => {
     0
   );
   const totalSale = selectedCartItems.reduce(
-    (sum, item) => sum + item.sale_price * item.quantity,
+    (sum, item) =>
+      sum +
+      (item.sale_price !== undefined ? item.sale_price : item.price) *
+        item.quantity,
     0
   );
   const totalDiscount = totalOriginal - totalSale;
-
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -106,9 +79,9 @@ const CartPage = () => {
       </Typography>
 
       <Box className="p-4 grid grid-cols-1 lg:grid-cols-6 gap-10">
-        {/* Danh sách sản phẩm trong giỏ */}
+        {/* Danh sách sản phẩm */}
         <Box className="lg:col-span-3 space-y-4">
-          {cartItems.map((item) => (
+          {cartItems.map((item: CartProduct) => (
             <Card
               key={item.cart_id}
               className="relative border p-2 shadow-sm"
@@ -122,11 +95,6 @@ const CartPage = () => {
               <Checkbox
                 className="absolute top-2 left-2"
                 disableRipple
-                sx={{
-                  padding: 0,
-                  "& .MuiTouchRipple-root": { display: "none" },
-                  "&:hover": { backgroundColor: "transparent" },
-                }}
                 checked={selectedItems.includes(item.cart_id)}
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -141,8 +109,11 @@ const CartPage = () => {
 
               <CardMedia
                 component="img"
-                image={item.image || "/default-product.jpg"}
-                alt={item.title}
+                image={
+                  // Ưu tiên lấy image từ product nếu có, nếu không thì lấy trực tiếp từ item.image
+                  item.image || item.image || "/default-product.jpg"
+                }
+                alt={item.title || item.title || "Sản phẩm"}
                 sx={{
                   width: 96,
                   height: 96,
@@ -153,19 +124,23 @@ const CartPage = () => {
               />
 
               <CardContent sx={{ flex: 1 }}>
-                <Typography fontWeight={600}>{item.title}</Typography>
+                <Typography fontWeight={600}>
+                  {item.title || item.title || "Không có tên sản phẩm"}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Màu: {item.color} | Size: {item.size}
                 </Typography>
                 <Typography color="error" fontWeight={500}>
-                  {formatPrice(item.sale_price)}
+                  {formatPrice(item.sale_price ?? item.price)}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ textDecoration: "line-through" }}
-                >
-                  {formatPrice(item.price)}
-                </Typography>
+                {item.sale_price !== undefined && (
+                  <Typography
+                    variant="body2"
+                    sx={{ textDecoration: "line-through" }}
+                  >
+                    {formatPrice(item.price)}
+                  </Typography>
+                )}
               </CardContent>
 
               <IconButton
@@ -193,14 +168,13 @@ const CartPage = () => {
           ))}
         </Box>
 
-        {/* Tổng kết đơn hàng */}
+        {/* Tổng kết */}
         <Box
           className="border lg:col-span-2 p-4 rounded space-y-3 bg-gray-50"
           sx={{
             position: "sticky",
             top: 100,
             height: "fit-content",
-            alignSelf: "start",
           }}
         >
           <Typography variant="h6" fontWeight={600}>

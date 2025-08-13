@@ -51,14 +51,17 @@ export const getCartItems = async (req: Request, res: Response) => {
         cp.quantity,
         cp.added_at,
         p.title,
+        -- p.image,  -- lấy ảnh từ bảng products
         pv.price,
         pv.sale_price,
-        pv.image,
         c.name AS color,
         c.hex_code,
         s.name AS size
       FROM cart_products cp
-      JOIN product_variants pv ON pv.product_id = cp.product_id AND pv.color_id = cp.color_id AND pv.size_id = cp.size_id
+      JOIN product_variants pv 
+        ON pv.product_id = cp.product_id 
+        AND pv.color_id = cp.color_id 
+        AND pv.size_id = cp.size_id
       JOIN products p ON cp.product_id = p.id
       JOIN colors c ON cp.color_id = c.id
       JOIN sizes s ON cp.size_id = s.id
@@ -83,10 +86,10 @@ export const deleteCartItem = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Thiếu cartId." });
     }
 
-    await db.query(
-      "DELETE FROM cart_products WHERE id = ? AND user_id = ?",
-      [cartId, userId]
-    );
+    await db.query("DELETE FROM cart_products WHERE id = ? AND user_id = ?", [
+      cartId,
+      userId,
+    ]);
 
     return res.status(200).json({ message: "Đã xoá sản phẩm khỏi giỏ hàng." });
   } catch (error) {

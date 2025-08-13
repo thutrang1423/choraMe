@@ -10,7 +10,7 @@ import { useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../context/authen/AuthContext";
 import { CartContext } from "../../../context/cart/CartContext";
-import serverInstance from "../../../config/axios.config";
+import serverInstance from "../../../api/axios.config";
 import { toast } from "react-toastify";
 
 interface ProductInfoProps {
