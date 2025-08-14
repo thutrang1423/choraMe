@@ -13,67 +13,62 @@ import Breadcrumb from "../components/common/Breadcrumb";
 import MainLayout from "../components/layout/MainLayout";
 import QuantitySelector from "../components/productDetail/molecules/QuantitySelector";
 import { useEffect, useState } from "react";
-import { fetchCartItems } from "../config/api/cartApi";
-
-interface CartItem {
-  cart_id: string;
-  product_id: string;
-  title: string;
-  image: string;
-  color: string;
-  hex_code: string;
-  size: string;
-  price: number;
-  sale_price: number;
-  quantity: number;
-}
+import { useCart } from "../context/cart/CartContext";
+import { CartProduct } from "../types/cart.type";
+import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const navigate = useNavigate();
+  const { cartItems, fetchCartItems, updateCartItemQty, deleteCartItemById } =
+    useCart();
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   useEffect(() => {
-    const loadCart = async () => {
-      try {
-        const data = await fetchCartItems();
-        setCartItems(data);
-        setSelectedItems(data.map((item: CartItem) => item.cart_id));
-      } catch (error) {
-        console.error("Lỗi khi lấy giỏ hàng:", error);
-      }
-    };
-    loadCart();
-  }, []);
+    fetchCartItems();
+  }, [fetchCartItems]);
 
-  const handleQuantityChange = (id: string, newQty: number) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.cart_id === id ? { ...item, quantity: newQty } : item
-      )
-    );
+  useEffect(() => {
+    const newSelected = cartItems.map((item) => item.cart_id);
+
+    // So sánh 2 mảng đơn giản: cùng độ dài và phần tử tương ứng giống nhau
+    const isSame =
+      selectedItems.length === newSelected.length &&
+      selectedItems.every((id, idx) => id === newSelected[idx]);
+
+    if (!isSame) {
+      setSelectedItems(newSelected);
+    }
+  }, [cartItems, selectedItems]);
+
+  const handleQuantityChange = async (cartId: number, newQty: number) => {
+    await updateCartItemQty(cartId, newQty);
   };
 
-  const handleDelete = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.cart_id !== id));
-    setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
-    // TODO: gọi API xóa giỏ hàng ở backend nếu cần
+  const handleDelete = async (cartId: number) => {
+    await deleteCartItemById(cartId);
   };
 
   const formatPrice = (val: number) => `${val.toLocaleString("vi-VN")}₫`;
 
   const selectedCartItems = cartItems.filter((item) =>
-    selectedItems.includes(item.cart_id)
-  );
+  selectedItems.includes(item.cart_id)
+);
 
-  const totalOriginal = selectedCartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const totalSale = selectedCartItems.reduce(
-    (sum, item) => sum + item.sale_price * item.quantity,
-    0
-  );
-  const totalDiscount = totalOriginal - totalSale;
+const totalOriginal = selectedCartItems.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0
+);
+
+const totalSale = selectedCartItems.reduce(
+  (sum, item) =>
+    sum +
+    (item.sale_price !== undefined ? item.sale_price : item.price) *
+      item.quantity,
+  0
+);
+
+const totalDiscount = totalOriginal - totalSale;
+const totalQuantity = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0); // LƯU Ý sửa đây
 
   return (
     <MainLayout>
@@ -88,9 +83,9 @@ const CartPage = () => {
       </Typography>
 
       <Box className="p-4 grid grid-cols-1 lg:grid-cols-6 gap-10">
-        {/* Danh sách sản phẩm trong giỏ */}
+        {/* Danh sách sản phẩm */}
         <Box className="lg:col-span-3 space-y-4">
-          {cartItems.map((item) => (
+          {cartItems.map((item: CartProduct) => (
             <Card
               key={item.cart_id}
               className="relative border p-2 shadow-sm"
@@ -101,14 +96,9 @@ const CartPage = () => {
                 minHeight: 120,
               }}
             >
-              <Checkbox
+              {/* <Checkbox
                 className="absolute top-2 left-2"
                 disableRipple
-                sx={{
-                  padding: 0,
-                  "& .MuiTouchRipple-root": { display: "none" },
-                  "&:hover": { backgroundColor: "transparent" },
-                }}
                 checked={selectedItems.includes(item.cart_id)}
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -119,12 +109,15 @@ const CartPage = () => {
                     );
                   }
                 }}
-              />
+              /> */}
 
               <CardMedia
                 component="img"
-                image={item.image || "/default-product.jpg"}
-                alt={item.title}
+                image={
+                  // Ưu tiên lấy image từ product nếu có, nếu không thì lấy trực tiếp từ item.image
+                  item.image || item.image || "/default-product.jpg"
+                }
+                alt={item.title || item.title || "Sản phẩm"}
                 sx={{
                   width: 96,
                   height: 96,
@@ -132,22 +125,27 @@ const CartPage = () => {
                   borderRadius: "8px",
                   marginLeft: 6,
                 }}
+                onClick={() => navigate(`/products/${item.product_id}`)}
               />
 
               <CardContent sx={{ flex: 1 }}>
-                <Typography fontWeight={600}>{item.title}</Typography>
+                <Typography fontWeight={600}>
+                  {item.title || item.title || "Không có tên sản phẩm"}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Màu: {item.color} | Size: {item.size}
                 </Typography>
                 <Typography color="error" fontWeight={500}>
-                  {formatPrice(item.sale_price)}
+                  {formatPrice(item.sale_price ?? item.price)}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ textDecoration: "line-through" }}
-                >
-                  {formatPrice(item.price)}
-                </Typography>
+                {item.sale_price !== undefined && (
+                  <Typography
+                    variant="body2"
+                    sx={{ textDecoration: "line-through" }}
+                  >
+                    {formatPrice(item.price)}
+                  </Typography>
+                )}
               </CardContent>
 
               <IconButton
@@ -175,14 +173,13 @@ const CartPage = () => {
           ))}
         </Box>
 
-        {/* Tổng kết đơn hàng */}
+        {/* Tổng kết */}
         <Box
           className="border lg:col-span-2 p-4 rounded space-y-3 bg-gray-50"
           sx={{
             position: "sticky",
             top: 100,
             height: "fit-content",
-            alignSelf: "start",
           }}
         >
           <Typography variant="h6" fontWeight={600}>
@@ -201,6 +198,10 @@ const CartPage = () => {
           <Box className="flex justify-between font-semibold text-lg">
             <span>Tổng cộng:</span>
             <span className="text-red-500">{formatPrice(totalSale)}</span>
+          </Box>
+          <Box className="flex justify-between text-sm text-gray-500">
+            <span>Tổng số lượng:</span>
+            <span>{totalQuantity}</span>
           </Box>
           <Button
             variant="contained"

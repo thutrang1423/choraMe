@@ -7,7 +7,7 @@ const JWT_SECRET =
 
 interface DecodedToken {
   id: number;
-  role: "user" | "admin";
+  role: "customer" | "staff" |"admin";
   iat: number;
   exp: number;
 }
@@ -42,7 +42,7 @@ export const verifyToken = (
   }
 };
 
-export const allowRoles = (...allowedRoles: ("user" | "admin")[]) => {
+export const allowRoles = (...allowedRoles: ("customer" |"staff"| "admin")[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const role = req.user?.role;
 

@@ -51,14 +51,17 @@ export const getCartItems = async (req: Request, res: Response) => {
         cp.quantity,
         cp.added_at,
         p.title,
+        -- p.image,  -- lấy ảnh từ bảng products
         pv.price,
         pv.sale_price,
-        pv.image,
         c.name AS color,
         c.hex_code,
         s.name AS size
       FROM cart_products cp
-      JOIN product_variants pv ON pv.product_id = cp.product_id AND pv.color_id = cp.color_id AND pv.size_id = cp.size_id
+      JOIN product_variants pv 
+        ON pv.product_id = cp.product_id 
+        AND pv.color_id = cp.color_id 
+        AND pv.size_id = cp.size_id
       JOIN products p ON cp.product_id = p.id
       JOIN colors c ON cp.color_id = c.id
       JOIN sizes s ON cp.size_id = s.id
@@ -70,5 +73,50 @@ export const getCartItems = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Get cart items error:", err);
     res.status(500).json({ message: "Không thể lấy giỏ hàng." });
+  }
+};
+
+// Xoá sản phẩm khỏi giỏ hàng
+export const deleteCartItem = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const cartId = req.params.cartId;
+
+    if (!cartId) {
+      return res.status(400).json({ message: "Thiếu cartId." });
+    }
+
+    await db.query("DELETE FROM cart_products WHERE id = ? AND user_id = ?", [
+      cartId,
+      userId,
+    ]);
+
+    return res.status(200).json({ message: "Đã xoá sản phẩm khỏi giỏ hàng." });
+  } catch (error) {
+    console.error("Delete cart item error:", error);
+    res.status(500).json({ message: "Lỗi server khi xoá sản phẩm." });
+  }
+};
+
+// Cập nhật số lượng sản phẩm trong giỏ hàng
+export const updateCartItemQuantity = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const cartId = req.params.cartId;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Số lượng không hợp lệ." });
+    }
+
+    await db.query(
+      "UPDATE cart_products SET quantity = ? WHERE id = ? AND user_id = ?",
+      [quantity, cartId, userId]
+    );
+
+    return res.status(200).json({ message: "Cập nhật số lượng thành công." });
+  } catch (error) {
+    console.error("Update quantity error:", error);
+    res.status(500).json({ message: "Lỗi server khi cập nhật số lượng." });
   }
 };

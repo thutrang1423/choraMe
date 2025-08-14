@@ -1,12 +1,12 @@
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../context/authen/AuthContext";
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/authen/AuthContext"; // <-- dùng AuthContext mới
 import { Button, TextField, Typography, Box } from "@mui/material";
 import Breadcrumb from "../components/common/Breadcrumb";
 import { useNavigate } from "react-router-dom";
-import axios from "../config/api/axios.config";
+import axios from "../api/axios.config";
 
-export default function CustomerInformation() {
-  const { logout } = useContext(AuthContext);
+export default function UserInfo() {
+  const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const [info, setInfo] = useState({
@@ -23,24 +23,17 @@ export default function CustomerInformation() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [message, setMessage] = useState("");
 
+  // Lấy dữ liệu từ context
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/me", { withCredentials: true })
-      .then((res) => {
-        setInfo({
-          email: res.data.email,
-          full_name: res.data.full_name,
-          role: res.data.role,
-          created_at: res.data.created_at,
-        });
-      })
-      .catch((err) => {
-        console.error("Lỗi khi lấy user:", err);
-        setMessage(
-          "Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại."
-        );
+    if (currentUser) {
+      setInfo({
+        email: currentUser.email,
+        full_name: (currentUser as any).full_name || "",
+        role: currentUser.role,
+        created_at: (currentUser as any).created_at || "",
       });
-  }, []);
+    }
+  }, [currentUser]);
 
   const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -100,9 +93,10 @@ export default function CustomerInformation() {
       <Breadcrumb
         items={[
           { label: "Trang chủ", href: "/" },
-          { label: "Thông tin khách hàng", href: "/customer/info" },
+          { label: "Thông tin tài khoản", href: "/user/info" },
         ]}
       />
+
       <Box className="p-4 max-w-xl mx-auto">
         <Typography variant="h5" className="mb-4">
           Thông tin tài khoản
@@ -121,7 +115,9 @@ export default function CustomerInformation() {
             </Typography>
             <Typography>
               <strong>Ngày tạo:</strong>{" "}
-              {new Date(info.created_at).toLocaleDateString()}
+              {info.created_at
+                ? new Date(info.created_at).toLocaleDateString()
+                : ""}
             </Typography>
           </Box>
         )}
@@ -134,7 +130,6 @@ export default function CustomerInformation() {
               value={info.email}
               fullWidth
               onChange={handleInfoChange}
-              disabled={!editingInfo}
               className="mb-4"
             />
             <TextField
@@ -143,7 +138,6 @@ export default function CustomerInformation() {
               value={info.full_name}
               fullWidth
               onChange={handleInfoChange}
-              disabled={!editingInfo}
               className="mb-4"
             />
             <TextField

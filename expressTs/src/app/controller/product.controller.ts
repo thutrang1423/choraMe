@@ -285,3 +285,5 @@ export const getProduct = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
+
+
